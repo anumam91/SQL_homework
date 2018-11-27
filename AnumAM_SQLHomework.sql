@@ -35,7 +35,7 @@ GROUP BY last_name;
 -- 4b. List last names of actors and the number of actors who have that last name, but only for names that are shared by at least two actors
 SELECT last_name, COUNT(last_name) AS 'Count' FROM actor
 GROUP BY last_name
-HAVING Count >2; 
+HAVING Count >=2; 
 
 -- 4c. The actor HARPO WILLIAMS was accidentally entered in the actor table as GROUCHO WILLIAMS. Write a query to fix the record.
 UPDATE actor
@@ -61,6 +61,7 @@ staff.address_id = address.address_ID;
 SELECT first_name, last_name, SUM(payment.amount) AS 'Total Amount Rung Up'
 FROM staff JOIN payment ON
 staff.staff_id = payment.staff_id
+WHERE payment.payment_date LIKE '2005-08%'
 GROUP BY first_name, Last_name;
 
 
@@ -141,7 +142,8 @@ ORDER BY Rentals DESC;
 
 
 -- 7f. Write a query to display how much business, in dollars, each store brought in.
-SELECT store.store_id as 'Store', SUM(amount) as 'Total Business ($)' FROM store
+SELECT store.store_id as 'Store', SUM(payment.amount) as 'Total Business ($)' 
+FROM store
 JOIN staff ON (store.store_id = staff.store_id)
 JOIN payment ON (staff.staff_id = payment.staff_id)
 GROUP BY Store; 
@@ -156,9 +158,31 @@ JOIN country ON (city.country_id = country.country_id);
 
 -- 7h. List the top five genres in gross revenue in descending order. (Hint: you may need to use the following tables: 
 -- category, film_category, inventory, payment, and rental.)
+SELECT category.name AS 'Genre', SUM(payment.amount) AS 'Gross_Revenue' FROM category 
+JOIN film_category ON (film_category.category_id = category.category_id)
+JOIN inventory ON (inventory.film_id = film_category.film_ID)
+JOIN rental ON (rental.inventory_id = inventory.inventory_id)
+JOIN payment ON (payment.rental_id = rental.rental_ID)
+GROUP BY Genre
+ORDER BY Gross_Revenue DESC
+LIMIT 5;
 
 
+-- 8a. In your new role as an executive, you would like to have an easy way of viewing the Top five genres by gross revenue. 
+-- Use the solution from the problem above to create a view. If you haven't solved 7h, you can substitute another query to create a view.
+DROP VIEW IF EXISTS top5_genres; 
+CREATE VIEW top5_genres AS
+SELECT category.name AS 'Genre', SUM(payment.amount) AS 'Gross_Revenue' FROM category 
+JOIN film_category ON (film_category.category_id = category.category_id)
+JOIN inventory ON (inventory.film_id = film_category.film_ID)
+JOIN rental ON (rental.inventory_id = inventory.inventory_id)
+JOIN payment ON (payment.rental_id = rental.rental_ID)
+GROUP BY Genre
+ORDER BY Gross_Revenue DESC
+LIMIT 5;
 
--- 8a. In your new role as an executive, you would like to have an easy way of viewing the Top five genres by gross revenue. Use the solution from the problem above to create a view. If you haven't solved 7h, you can substitute another query to create a view.
 -- 8b. How would you display the view that you created in 8a?
+SELECT * FROM top5_genres;
+
 -- 8c. You find that you no longer need the view top_five_genres. Write a query to delete it.
+DROP VIEW top5_genres;
